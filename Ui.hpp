@@ -47,6 +47,7 @@ namespace Bastet{
     void DrawDot(const Dot &d, Color c);
     void DrawGrid(const Dot &d); //faint background grid for empty cells
     void DrawGhost(const Dot &d, Color c); //landing preview of the falling block
+    void MoveTo(int y, int x); //moves the window (border included) to a new position
   };
 
   class Curses{
@@ -83,6 +84,10 @@ namespace Bastet{
     BorderedWindow _wellWin;
     BorderedWindow _nextWin;
     BorderedWindow _scoreWin;
+    BlockType _next=BlockType(0); //last block shown in the preview, for redraws
+    bool _hasNext=false;
+    void Relayout(); //re-centres the windows after a terminal resize
+    void RedrawAfterResize(); //Relayout + redraw of the static parts, score and preview
     /**
      * this is a kind of "well" structure to store the colors used to draw the blocks.
      */

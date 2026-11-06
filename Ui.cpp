@@ -70,6 +70,14 @@ namespace Bastet{
     delwin(_border);
   }
   
+  void BorderedWindow::MoveTo(int y, int x){
+    int h, w;
+    getmaxyx(_window,h,w);
+    delwin(_window); //a derived window does not follow its parent, so recreate it
+    mvwin(_border,y<0?0:y,x<0?0:x);
+    _window=derwin(_border,h,w,1,1);
+  }
+
   BorderedWindow::operator WINDOW*(){
     return _window;
   }
@@ -216,21 +224,22 @@ namespace Bastet{
   }
 
   void Ui::MessageDialog(const std::string &message){
-    RedrawStatic();
-
     Dot d=BoundingRect(message);
-
-    BorderedWindow w(d.y,d.x);
-    wattrset((WINDOW *)w,COLOR_PAIR(20));
-    mvwprintw(w,0,0,message.c_str());
-    w.RedrawBorder();
-    wrefresh(w);
-    PrepareUiGetch();
     int ch;
-    do{
-      ch=getch();
-    }
-    while(ch!=' ' && ch!=13); //13=return key!=KEY_ENTER, it seems
+    do{ //redraw from scratch after every terminal resize
+      RedrawStatic();
+      BorderedWindow w(d.y,d.x);
+      wattrset((WINDOW *)w,COLOR_PAIR(20));
+      mvwprintw(w,0,0,message.c_str());
+      w.RedrawBorder();
+      wrefresh(w);
+      PrepareUiGetch();
+      do{
+	ch=getch();
+      }
+      while(ch!=' ' && ch!=13 && ch!=KEY_RESIZE); //13=return key!=KEY_ENTER, it seems
+      if(ch==KEY_RESIZE) Relayout();
+    } while(ch==KEY_RESIZE);
   }
 
   std::string Ui::InputDialog(const std::string &message){
@@ -275,6 +284,11 @@ namespace Bastet{
     }
 
     Dot d={int(width+5),int(choices.size())};
+    size_t chosen=0;
+    int ch;
+    bool done=false;
+    while(true){ //redraw from scratch after every terminal resize
+    RedrawStatic();
     BorderedWindow w(d.y,d.x);
     wattrset((WINDOW *)w,COLOR_PAIR(20));
     for(size_t i=0;i<choices.size();++i){
@@ -283,9 +297,7 @@ namespace Bastet{
     w.RedrawBorder();
     wrefresh(w);
     PrepareUiGetch();
-    size_t chosen=0;
-    int ch;
-    bool done=false;
+    bool resized=false;
     mvwprintw(w,chosen,1,"-> ");
     wrefresh(w);
     do{
@@ -309,9 +321,14 @@ namespace Bastet{
       case ' ':
 	done=true;
 	break;
+      case KEY_RESIZE:
+	resized=true;
+	break;
       }
-    } while(!done);
-    return chosen;
+    } while(!done && !resized);
+    if(done) return chosen;
+    Relayout();
+    }
   }
   
   void Ui::ChooseLevel(){
@@ -414,6 +431,10 @@ namespace Bastet{
 	  //RedrawScore();
 	  break;
 	}
+	else if(ch==KEY_RESIZE){
+	  RedrawAfterResize();
+	  RedrawWell(w,b,p);
+	}
 	else if(ch==keys->Pause){
 	  MessageDialog("Press SPACE or ENTER to resume the game");
 	  RedrawStatic();
@@ -489,13 +510,31 @@ namespace Bastet{
     wrefresh(_wellWin);
   }
 
+  void Ui::Relayout(){
+    int screen_h, screen_w;
+    getmaxyx(stdscr,screen_h,screen_w);
+    _wellWin.MoveTo((screen_h-WellHeight-2)/2-1,(screen_w-2*WellWidth-2)/2-1);
+    _nextWin.MoveTo(_wellWin.GetMinY(),_wellWin.GetMaxX()+1);
+    _scoreWin.MoveTo(_nextWin.GetMaxY(),_nextWin.GetMinX());
+  }
+
+  void Ui::RedrawAfterResize(){
+    Relayout();
+    RedrawStatic();
+    RedrawScore();
+    if(_hasNext) RedrawNext(_next);
+  }
+
   void Ui::ClearNext(){
+    _hasNext=false;
     wmove((WINDOW*)_nextWin,1,0);
     wclrtobot((WINDOW*)_nextWin);
     wrefresh(_nextWin);
   }
 
   void Ui::RedrawNext(BlockType b){
+    _next=b;
+    _hasNext=true;
     wmove((WINDOW*)_nextWin,1,0);
     wclrtobot((WINDOW*)_nextWin);
     
@@ -545,7 +584,11 @@ namespace Bastet{
       ClearNext();
     try{
       while(true){
-	while(getch()!=ERR); //ignores the keys pressed during the next block calculation
+	{ //ignores the keys pressed during the next block calculation, but not resizes
+	  int c; bool resized=false;
+	  while((c=getch())!=ERR) if(c==KEY_RESIZE) resized=true;
+	  if(resized) RedrawAfterResize();
+	}
 	BlockType current=q.front();
 	q.pop_front();
 	if(!q.empty()) RedrawNext(q.front());
