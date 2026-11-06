@@ -72,7 +72,7 @@ namespace Bastet{
     void DropBlock(BlockType b, Well *w); //returns <score,lines>
     
     void ChooseLevel();
-    void Play(BlockChooser *bc);
+    void Play(BlockChooser *bc, difficulty_t diff);
     void HandleHighScores(difficulty_t diff); ///if needed, asks name for highscores
     void ShowHighScores(difficulty_t diff);
     void CustomizeKeys();
@@ -81,6 +81,7 @@ namespace Bastet{
     int _level;
     int _points;
     int _lines;
+    int _best; //top score on this mode's board when the game started
     Curses _curses;
     BorderedWindow _wellWin;
     BorderedWindow _nextWin;

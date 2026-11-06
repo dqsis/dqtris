@@ -564,10 +564,11 @@ namespace Bastet{
   void Ui::RedrawScore(){
     wattrset((WINDOW*)_scoreWin,COLOR_PAIR(17));
     mvwprintw(_scoreWin,1,7,"%6d",_points);
+    mvwprintw(_scoreWin,2,5,"%8s",str(format("(%1%)") % max(_best,_points)).c_str()); //best on this board, or this game once beaten
     wattrset((WINDOW*)_scoreWin,COLOR_PAIR(18));
     mvwprintw(_scoreWin,3,7,"%6d",_lines);
     wattrset((WINDOW*)_scoreWin,COLOR_PAIR(19));
-    mvwprintw(_scoreWin,5,7,"%6d",_level);
+    mvwprintw(_scoreWin,5,7,"%6s",str(format("%1%/%2%") % (_level+1) % int(delay.size())).c_str()); //levels 1 to 10
     wrefresh(_scoreWin);
     return;
   }
@@ -586,7 +587,11 @@ namespace Bastet{
     }
   }
 
-  void Ui::Play(BlockChooser *bc){
+  void Ui::Play(BlockChooser *bc, difficulty_t diff){
+    HighScores *hs=config.GetHighScores(diff);
+    _best=0;
+    BOOST_FOREACH(const HighScore &h, *hs)
+      _best=max(_best,h.Score);
     _level=0;
     _points=0;
     _lines=0;

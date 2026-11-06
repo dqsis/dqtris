@@ -38,21 +38,21 @@ int main(int argc, char **argv){
     switch(choice){
     case 0:{
       BagBlockChooser bc;
-      ui.Play(&bc);
+      ui.Play(&bc,difficulty_fair);
       ui.HandleHighScores(difficulty_fair);
       ui.ShowHighScores(difficulty_fair);
     }
       break;
     case 1:{
       BastetBlockChooser bc;
-      ui.Play(&bc);
+      ui.Play(&bc,difficulty_normal);
       ui.HandleHighScores(difficulty_normal);
       ui.ShowHighScores(difficulty_normal);
     }
       break;
     case 2:{
       NoPreviewBlockChooser bc;
-      ui.Play(&bc);
+      ui.Play(&bc,difficulty_hard);
       ui.HandleHighScores(difficulty_hard);
       ui.ShowHighScores(difficulty_hard);
     }
