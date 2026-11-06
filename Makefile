@@ -15,7 +15,7 @@ Test: $(SOURCES:.cpp=.o) $(TESTS:.cpp=.o)
 	$(CXX) -ggdb -o $(TESTS:.cpp=) $(SOURCES:.cpp=.o) $(TESTS:.cpp=.o) $(LDFLAGS) 
 
 depend: *.hpp $(SOURCES) $(MAIN) $(TESTS)
-	$(CXX) -MM $(SOURCES) $(MAIN) $(TESTS)> depend
+	$(CXX) $(CPPFLAGS) -MM $(SOURCES) $(MAIN) $(TESTS)> depend
 
 include depend
 
