@@ -22,6 +22,7 @@
 #include "BastetBlockChooser.hpp"
 #include "BlockChooser.hpp"
 
+#include <clocale>
 #include <cstdio>
 #include <cstdlib>
 #include <boost/format.hpp>
@@ -105,12 +106,33 @@ namespace Bastet{
   }
 
   void BorderedWindow::DrawDot(const Dot &d, Color c){
+    if(c==0 || COLORS<256){
+      wattrset((WINDOW *)(*this),c);
+      mvwaddch(*this,d.y,2*d.x,' ');
+      mvwaddch(*this,d.y,2*d.x+1,' ');
+      return;
+    }
+    //filled cell: solid colour with a thin black gap on its right edge,
+    //so neighbouring squares are visibly separated
     wattrset((WINDOW *)(*this),c);
     mvwaddch(*this,d.y,2*d.x,' ');
+    mvwaddstr(*this,d.y,2*d.x+1,"▕");
+  }
+
+  void BorderedWindow::DrawGrid(const Dot &d){
+    wattrset((WINDOW *)(*this),COLOR_PAIR(23));
+    mvwaddch(*this,d.y,2*d.x,ACS_BULLET);
     mvwaddch(*this,d.y,2*d.x+1,' ');
   }
 
+  void BorderedWindow::DrawGhost(const Dot &d, Color c){
+    wattrset((WINDOW *)(*this),c);
+    mvwaddch(*this,d.y,2*d.x,'[');
+    mvwaddch(*this,d.y,2*d.x+1,']');
+  }
+
   Curses::Curses(){
+    setlocale(LC_ALL,""); //needed for the unicode tile-gap glyph
     if(initscr()==NULL){
       fprintf(stderr,"bastet: error while initializing graphics (ncurses library).\n");
       exit(1);
@@ -142,7 +164,24 @@ namespace Bastet{
     init_pair(5, COLOR_BLACK, COLOR_MAGENTA);
     init_pair(6, COLOR_BLACK, COLOR_BLUE);
     init_pair(7, COLOR_BLACK, COLOR_WHITE);
-    
+    if(COLORS>=256){ //classic guideline colours
+      //foreground (black) draws the gap between squares
+      init_pair(1, COLOR_BLACK, 196); //Z red
+      init_pair(2, COLOR_BLACK, 208); //L orange
+      init_pair(3, COLOR_BLACK, 40);  //S green
+      init_pair(4, COLOR_BLACK, 51);  //I cyan
+      init_pair(5, COLOR_BLACK, 129); //T purple
+      init_pair(6, COLOR_BLACK, 27);  //J blue
+      init_pair(7, COLOR_BLACK, 220); //O yellow
+    }
+    init_pair(23, COLORS>=256 ? 238 : COLOR_WHITE, COLOR_BLACK); //background grid
+    /* 31 - 37: ghost piece, block colour as foreground */
+    for(short i=1;i<=7;++i){
+      short fg,bg;
+      pair_content(i,&fg,&bg);
+      init_pair(i+30,bg,COLOR_BLACK);
+    }
+
     
     /* 17 - ? is for other things */
     init_pair(17, COLOR_RED,    COLOR_BLACK); //points
@@ -431,9 +470,19 @@ namespace Bastet{
     for(int i=0;i<WellWidth;++i)
       for(int j=0;j<WellHeight;++j){
 	Dot d={i,j};
-	_wellWin.DrawDot(d,_colors[j+2][i]);
+	if(_colors[j+2][i]==0)
+	  _wellWin.DrawGrid(d);
+	else
+	  _wellWin.DrawDot(d,_colors[j+2][i]);
       }
     
+    //ghost piece: where the falling block would land on a hard drop
+    BlockPosition ghost=p;
+    ghost.Drop(b,w);
+    BOOST_FOREACH(const Dot &d, ghost.GetDots(b))
+      if(d.y>=0)
+	_wellWin.DrawGhost(d,COLOR_PAIR(PAIR_NUMBER(GetColor(b))+30));
+
     BOOST_FOREACH(const Dot &d, p.GetDots(b))
       _wellWin.DrawDot(d,GetColor(b));
 

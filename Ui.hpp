@@ -45,6 +45,8 @@ namespace Bastet{
     int GetMaxX();
     int GetMaxY();
     void DrawDot(const Dot &d, Color c);
+    void DrawGrid(const Dot &d); //faint background grid for empty cells
+    void DrawGhost(const Dot &d, Color c); //landing preview of the falling block
   };
 
   class Curses{
