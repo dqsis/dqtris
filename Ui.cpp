@@ -78,6 +78,14 @@ namespace Bastet{
     _window=derwin(_border,h,w,1,1);
   }
 
+  void BorderedWindow::Resize(int height, int width){
+    delwin(_window);
+    werase(_border);
+    wrefresh(_border);
+    wresize(_border,height+2,width+2);
+    _window=derwin(_border,height,width,1,1);
+  }
+
   BorderedWindow::operator WINDOW*(){
     return _window;
   }
@@ -142,12 +150,12 @@ namespace Bastet{
   Curses::Curses(){
     setlocale(LC_ALL,""); //needed for the unicode tile-gap glyph
     if(initscr()==NULL){
-      fprintf(stderr,"bastet: error while initializing graphics (ncurses library).\n");
+      fprintf(stderr,"dqtris: error while initializing graphics (ncurses library).\n");
       exit(1);
     }
     if(!has_colors()){
       endwin();
-      fprintf(stderr,"bastet: no color support, sorry. Ask the author for a black and white version.");
+      fprintf(stderr,"dqtris: no color support, sorry. Ask the author for a black and white version.");
       exit(1);
     }
     
@@ -364,8 +372,17 @@ namespace Bastet{
     _nextWin.RedrawBorder();
     _scoreWin.RedrawBorder();
 
+    //title above the well, if the terminal is tall enough
+    if(_wellWin.GetMinY()>0){
+      static const char title[]="D Q T R I S";
+      attrset(COLOR_PAIR(17)|A_BOLD);
+      mvprintw(_wellWin.GetMinY()-1,(_wellWin.GetMinX()+_wellWin.GetMaxX()-int(sizeof(title)-1))/2,"%s",title);
+      attrset(A_NORMAL);
+      wrefresh(stdscr);
+    }
+
     wattrset((WINDOW*)_nextWin,COLOR_PAIR(17));
-    mvwprintw(_nextWin,0,0," Next block:");
+    mvwprintw(_nextWin,0,0," Next:");
     wrefresh(_nextWin);
 
     wattrset((WINDOW*)_scoreWin,COLOR_PAIR(17));
@@ -522,25 +539,25 @@ namespace Bastet{
     Relayout();
     RedrawStatic();
     RedrawScore();
-    if(_hasNext) RedrawNext(_next);
+    RedrawNext(_next);
   }
 
   void Ui::ClearNext(){
-    _hasNext=false;
-    wmove((WINDOW*)_nextWin,1,0);
-    wclrtobot((WINDOW*)_nextWin);
-    wrefresh(_nextWin);
+    RedrawNext(Queue());
   }
 
-  void Ui::RedrawNext(BlockType b){
-    _next=b;
-    _hasNext=true;
+  void Ui::RedrawNext(const Queue &next){
+    _next=next;
     wmove((WINDOW*)_nextWin,1,0);
     wclrtobot((WINDOW*)_nextWin);
-    
-    BlockPosition p((Dot){2,2});
-    BOOST_FOREACH(const Dot &d, p.GetDots(b))
-      _nextWin.DrawDot(d,GetColor(b));
+
+    int y=2;
+    BOOST_FOREACH(BlockType b, next){
+      BlockPosition p((Dot){2,y});
+      BOOST_FOREACH(const Dot &d, p.GetDots(b))
+        _nextWin.DrawDot(d,GetColor(b));
+      y+=3;
+    }
     wrefresh(_nextWin);
   }
 
@@ -575,13 +592,16 @@ namespace Bastet{
     _lines=0;
     BOOST_FOREACH(ColorWellLine &a, _colors)
       a.assign(0);
+    Queue q=bc->GetStartingQueue();
+    //one 3-row slot per previewed block (at least one, so the layout matches bastet's)
+    int slots=max<int>(1,q.size()-1);
+    _nextWin.Resize(2+3*slots,14);
+    Relayout();
+    ClearNext();
     RedrawStatic();
     RedrawScore();
     Well w;
     nodelay(stdscr,TRUE);
-    Queue q=bc->GetStartingQueue();
-    if(q.size()==1) //no block preview
-      ClearNext();
     try{
       while(true){
 	{ //ignores the keys pressed during the next block calculation, but not resizes
@@ -591,7 +611,7 @@ namespace Bastet{
 	}
 	BlockType current=q.front();
 	q.pop_front();
-	if(!q.empty()) RedrawNext(q.front());
+	RedrawNext(q);
 	DropBlock(current,&w);
 	q.push_back(bc->GetNext(&w,q));
       }
@@ -618,10 +638,7 @@ namespace Bastet{
   void Ui::ShowHighScores(difficulty_t diff){
     HighScores *hs=config.GetHighScores(diff);
     string allscores;
-    if(diff==difficulty_normal)
-      allscores+="**Normal difficulty**\n";
-    else if(diff==difficulty_hard)
-      allscores+="**Hard difficulty**\n";
+    allscores+=str(format("**%1%**\n") % DifficultyName(diff));
     format fmt("%-20.20s %8d\n");
     for(HighScores::reverse_iterator it=hs->rbegin();it!=hs->rend();++it){
       allscores+=str(fmt % it->Scorer % it->Score);

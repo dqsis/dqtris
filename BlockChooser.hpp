@@ -48,6 +48,19 @@ namespace Bastet{
   private:
   };
 
+  ///"fair" chooser: deals shuffled bags of all seven tetrominoes, with a preview of the next ones
+  class BagBlockChooser: public BlockChooser{
+  public:
+    static const size_t Previews=1;
+    BagBlockChooser();
+    virtual ~BagBlockChooser();
+    virtual Queue GetStartingQueue();
+    virtual BlockType GetNext(const Well *well, const Queue &q);
+  private:
+    std::deque<BlockType> _bag;
+    BlockType Draw();
+  };
+
 }
 
 #endif //BLOCKCHOOSER_HPP

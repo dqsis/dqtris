@@ -1,7 +1,7 @@
 SOURCES=Ui.cpp Block.cpp Well.cpp BlockPosition.cpp Config.cpp BlockChooser.cpp BastetBlockChooser.cpp
 MAIN=main.cpp
 TESTS=Test.cpp
-PROGNAME=bastet
+PROGNAME=dqtris
 BOOST_PO?=-lboost_program_options
 LDFLAGS+=-lncurses $(BOOST_PO)
 #CXXFLAGS+=-ggdb -Wall

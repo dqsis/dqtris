@@ -48,6 +48,7 @@ namespace Bastet{
     void DrawGrid(const Dot &d); //faint background grid for empty cells
     void DrawGhost(const Dot &d, Color c); //landing preview of the falling block
     void MoveTo(int y, int x); //moves the window (border included) to a new position
+    void Resize(int height, int width); //inner dimensions, like the constructor
   };
 
   class Curses{
@@ -65,7 +66,7 @@ namespace Bastet{
     void RedrawStatic(); //redraws the "static" parts of the screen
     void RedrawWell(const Well *well, BlockType falling, const BlockPosition &pos);
     void ClearNext(); //clear the next block display
-    void RedrawNext(BlockType next); //redraws the next block display
+    void RedrawNext(const Queue &next); //redraws the preview of the upcoming blocks
     void RedrawScore();
     void CompletedLinesAnimation(const LinesCompleted &completed);
     void DropBlock(BlockType b, Well *w); //returns <score,lines>
@@ -84,8 +85,7 @@ namespace Bastet{
     BorderedWindow _wellWin;
     BorderedWindow _nextWin;
     BorderedWindow _scoreWin;
-    BlockType _next=BlockType(0); //last block shown in the preview, for redraws
-    bool _hasNext=false;
+    Queue _next; //blocks shown in the preview, for redraws
     void Relayout(); //re-centres the windows after a terminal resize
     void RedrawAfterResize(); //Relayout + redraw of the static parts, score and preview
     /**

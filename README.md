@@ -2,8 +2,8 @@
 
 A personal fork of [Bastet](https://github.com/fph/bastet) ("bastard Tetris"), the ncurses
 Tetris clone that deliberately picks the *worst* possible next piece. The evil block-chooser
-is untouched. This fork only makes losing to it look better and gives you a fairer view of
-how you're about to lose.
+is untouched, but dqtris adds a fair mode for when you'd rather not be bullied, and makes
+losing to the bastard look better.
 
 <p align="center">
   <img src="screenshots/dqtris.png" alt="dqtris in a terminal: classic piece colours, dot grid and a ghost piece" width="360">
@@ -14,6 +14,12 @@ how you're about to lose.
 </p>
 
 ## What's different
+
+- **Fair mode.** Pieces come from a shuffled "bag" of all seven tetrominoes, as in modern
+  Tetris, so you never wait forever for an I piece. The bastard modes are still there.
+- **Separate high scores.** One board each for Fair, Bastard and Bastard (no preview).
+  dqtris keeps its own `~/.dqtrisrc` and `~/.dqtrisscores`; on first run it copies your keys
+  and scores from bastet's files, which it leaves alone.
 
 - **Classic colours.** On 256-colour terminals, every tetromino gets its familiar colour:
   I cyan, O yellow, T purple, S green, Z red, J blue, L orange.
@@ -27,7 +33,7 @@ how you're about to lose.
   time under a tiling window manager. dqtris re-centres and redraws the game, the pause
   dialog and the menus on every resize.
 
-Everything else (gameplay, keys, high scores, the bastard algorithm) is upstream bastet.
+Everything else (scoring, keys, the bastard algorithm) is upstream bastet.
 
 ## Build
 
@@ -35,7 +41,7 @@ Requirements: a C++ compiler, `ncurses` and Boost (`program_options` plus header
 
 ```sh
 make
-./bastet
+./dqtris
 ```
 
 If the Boost headers live somewhere non-standard:
@@ -47,7 +53,7 @@ make CPPFLAGS=-I/path/to/boost/include
 To run it as `dqtris`, add an alias to your shell config:
 
 ```sh
-alias dqtris="$HOME/code/dqtris/bastet"
+alias dqtris="$HOME/code/dqtris/dqtris"
 ```
 
 The new visuals need a 256-colour terminal with a font that has the `▕` glyph (most modern

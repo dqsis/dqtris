@@ -48,7 +48,8 @@ namespace Bastet{
 
   extern const size_t HowManyHighScores; //how many high scores to save in the file
 
-  enum difficulty_t {difficulty_normal=0,difficulty_hard=1,num_difficulties=2};
+  enum difficulty_t {difficulty_normal=0,difficulty_hard=1,difficulty_fair=2,num_difficulties=3};
+  extern const char *DifficultyName(int difficulty);
 
   class HighScores: public std::vector<HighScore>{ //a set would not do the right job (think to ties)
   public:
@@ -58,7 +59,8 @@ namespace Bastet{
 
   extern const std::string RcFileName;
   extern const std::string LocalHighScoresFileName;
-  extern const std::string GlobalHighScoresFileName;
+  extern const std::string LegacyRcFileName; //bastet's files, read once to migrate keys and scores
+  extern const std::string LegacyHighScoresFileName;
 
   class Config{
   private:

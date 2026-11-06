@@ -34,33 +34,39 @@ using namespace boost::assign;
 int main(int argc, char **argv){
   Ui ui;
   while(1){
-    
-    int choice=ui.MenuDialog(list_of("Play! (normal version)")("Play! (harder version)")("View highscores")("Customize keys")("Quit"));
+    int choice=ui.MenuDialog(list_of("Play! (fair)")("Play! (bastard)")("Play! (bastard, no preview)")("View high scores")("Customize keys")("Quit"));
     switch(choice){
     case 0:{
-      //ui.ChooseLevel();
+      BagBlockChooser bc;
+      ui.Play(&bc);
+      ui.HandleHighScores(difficulty_fair);
+      ui.ShowHighScores(difficulty_fair);
+    }
+      break;
+    case 1:{
       BastetBlockChooser bc;
       ui.Play(&bc);
       ui.HandleHighScores(difficulty_normal);
       ui.ShowHighScores(difficulty_normal);
     }
       break;
-    case 1:{
-      //ui.ChooseLevel();
+    case 2:{
       NoPreviewBlockChooser bc;
       ui.Play(&bc);
       ui.HandleHighScores(difficulty_hard);
       ui.ShowHighScores(difficulty_hard);
     }
       break;
-    case 2:
-      ui.ShowHighScores(difficulty_normal);
-      ui.ShowHighScores(difficulty_hard);
-      break;
-    case 3:
-      ui.CustomizeKeys();
+    case 3:{
+      static const difficulty_t boards[]={difficulty_fair,difficulty_normal,difficulty_hard};
+      int b=ui.MenuDialog(list_of(string("Fair"))("Bastard")("Bastard, no preview")("Back"));
+      if(b<3) ui.ShowHighScores(boards[b]);
+    }
       break;
     case 4:
+      ui.CustomizeKeys();
+      break;
+    case 5:
       exit(0);
       break;
     }
