@@ -6,7 +6,7 @@ is untouched, but dqtris adds a fair mode for when you'd rather not be bullied, 
 losing to the bastard look better.
 
 <p align="center">
-  <img src="screenshots/dqtris.png" alt="dqtris in a terminal: classic piece colours, dot grid and a ghost piece" width="360">
+  <img src="screenshots/dqtris.png" alt="dqtris in a terminal: title, classic piece colours, dot grid and a ghost piece" width="360">
   &nbsp;&nbsp;
   <img src="bastet043_play.png" alt="original bastet for comparison" width="360">
   <br>
